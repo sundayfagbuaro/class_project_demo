@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: flask-app
+    namespace: class-demo
+spec:
+    type: LoadBalancer
+    selector:
+        app: flask_db
+    ports:
+        - name: "flask-app"
+          protocol: TCP
+          port: 5000
+          targetPort: 5000
+#          nodePort: 30001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: flaskapp-deployment
+    labels:
+        app: flask_db
+    namespace: class-demo
+spec:
+    replicas: 3
+    selector:
+        matchLabels:
+            app: flask_db
+    template:
+        metadata:
+            labels:
+                app: flask_db
+        spec:
+#          imagePullSecrets:
+#          - name: secret-created-for-docker-on-k8
+            containers:
+                - name: flask-app
+                  image: sundayfagbuaro/flask-class-demo:v1.0 
+                  ports:
+                    - containerPort: 5000
+                  env:
+                  - name: MYSQL_HOST
+                    valueFrom:
+                      configMapKeyRef:
+                         name: demo-mysql-configmap
+                         key: host
+                  - name: MYSQL_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: demo-mysql-secret
+                        key: db_user
+                  - name: MYSQL_ROOT_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: demo-mysql-secret
+                        key: db_password
+                  - name: MYSQL_DB
+                    valueFrom:
+                      configMapKeyRef:
+                        name: demo-mysql-configmap
+                        key: db

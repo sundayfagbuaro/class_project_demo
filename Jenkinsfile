@@ -36,6 +36,13 @@ pipeline{
                 sh 'docker push sundayfagbuaro/flask-class-demo:v1.0'
             }
         }
+        stage('Deploy to K8 Cluster'){
+            steps{
+                script{
+                  kubernetesDeploy (configs: "deployment.yaml", kubeconfigId: 'k8-flask-class-demo')
+                }
+            }
+        }
 
     }
 }
